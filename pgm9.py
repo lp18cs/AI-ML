@@ -1,47 +1,21 @@
-from numpy import *
-import operator
-from os import listdir
-import matplotlib 
+import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-import numpy.linalg
-from scipy.stats.stats import pearsonr
-
-def kernel(point,xmat,k):
-    m,n=shape(xmat)
-    weights=mat(eye((m)))
-    for j in range(m):
-        diff=point-X[j]
-        weights[j,j]=exp(diff*diff.T/(-2.0*k**2))
-        return weights
-def localWeight(point,xmat,ymat,k):
-    wei=kernel(point,xmat,k)
-    W=((X.T*wei*X)).I*(X.T*(wei*ymat.T))
-    return W
-
-def localWeightRegression(xmat,ymat,k):
-    m,n=shape(xmat)
-    ypred=zeros(m)
-    for i in range(m):
-            ypred [i]=xmat[i]*localWeight(xmat[i],xmat,ymat,k)
-    return ypred
-# The dataset used here is tips.csv stored in the anaconda installed folder
-data=pd.read_csv('tips.csv')
-bill=array(data.bill)
-tip=array(data.tip)
-mbill=mat(bill)
-mtip=mat(tip)
-m=shape(mbill)[1]
-one=mat(ones(m))
-X=hstack((one.T,mbill.T))
-
-ypred=localWeightRegression(X,mtip,0.5)
-SortIndex=X[:,1].argsort(0)
-xsort=X[SortIndex][:,0]
-fig=plt.figure()
-ax=fig.add_subplot(1,1,1)
-ax.scatter(bill,tip,color='green')
-ax.plot(xsort[:,1],ypred[SortIndex],color='red',linewidth=5)
-plt.xlabel('bill')
-plt.ylabel('tip')
-plt.show()
+def local_regression(x0, X, Y, tau):
+ x0 = [1, x0] 
+ X = [[1, i] for i in X]
+ X = np.asarray(X)
+ xw = (X.T) * np.exp(np.sum((X - x0) ** 2, axis=1) / (-2 * tau))
+ beta = np.linalg.pinv(xw @ X) @ xw @ Y @ x0 
+ return beta 
+def draw(tau):
+ prediction = [local_regression(x0, X, Y, tau) for x0 in domain]
+ plt.plot(X, Y, 'o', color='black')
+ plt.plot(domain, prediction, color='red')
+ plt.show()
+X = np.linspace(-3, 3, num=1000)
+domain = X
+Y = np.log(np.abs(X ** 2 - 1) + .5)
+draw(10)
+draw(0.1)
+draw(0.01)
+draw(0.001)
